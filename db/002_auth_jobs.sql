@@ -1,0 +1,14 @@
+create table if not exists public.profiles (id uuid primary key, role text not null default 'candidate', full_name text, created_at timestamptz default now());
+alter table if exists public.companies add column if not exists slug text unique, add column if not exists website text;
+alter table if exists public.jobs add column if not exists salary_min int, add column if not exists salary_max int, add column if not exists currency text default 'EUR', add column if not exists employment_type text default 'FULL_TIME', add column if not exists geo_lng double precision, add column if not exists geo_lat double precision;
+create table if not exists public.applications (id uuid primary key default gen_random_uuid(), job_id uuid not null references public.jobs(id) on delete cascade, candidate_id uuid not null references public.profiles(id) on delete cascade, cv_url text, note text, status text default 'applied', created_at timestamptz default now());
+alter table public.profiles enable row level security;
+create policy if not exists "self profile" on public.profiles for select using ( auth.uid() = id );
+alter table public.companies enable row level security;
+create policy if not exists "company owners" on public.companies for select using ( auth.uid() = owner_user_id );
+alter table public.jobs enable row level security;
+create policy if not exists "jobs readable" on public.jobs for select using ( true );
+create policy if not exists "employer manage jobs" on public.jobs for insert with check ( auth.uid() = (select owner_user_id from companies c where c.id = jobs.company_id) ) using ( auth.uid() = (select owner_user_id from companies c where c.id = jobs.company_id) );
+alter table public.applications enable row level security;
+create policy if not exists "candidate manage self applications" on public.applications for all using ( auth.uid() = candidate_id ) with check ( auth.uid() = candidate_id );
+create policy if not exists "employer view applications" on public.applications for select using ( exists(select 1 from jobs j join companies c on c.id=j.company_id where j.id=applications.job_id and c.owner_user_id=auth.uid()) );
