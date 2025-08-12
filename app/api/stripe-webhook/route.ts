@@ -1,8 +1,10 @@
+// Force Node.js runtime for Stripe
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
-
-export const dynamic = "force-dynamic";
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY || "";

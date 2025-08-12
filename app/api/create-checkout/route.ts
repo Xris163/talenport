@@ -1,3 +1,6 @@
+// Force Node.js runtime for Stripe
+export const runtime = 'nodejs';
+
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
@@ -7,7 +10,6 @@ export async function POST(req: NextRequest) {
 
   const key = process.env.STRIPE_SECRET_KEY || "";
   if (!key) {
-    // No keys? Return demo id so UI won't break during build/preview
     return NextResponse.json({ id: "sess_demo_no_stripe_key" });
   }
   const stripe = new Stripe(key, { apiVersion: "2024-06-20" } as any);
